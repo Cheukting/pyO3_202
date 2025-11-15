@@ -6,12 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 name = "py202"
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = "0.27"
-
-[[test]]
-name = "test_py202"
-path = "pytests/test.rs"
-harness = false

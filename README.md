@@ -35,13 +35,13 @@ cd pyo3_202
 2. Install both normal and thread-free Python
 
 ```
-uv python install 3.13.2 3.13.2+freethreaded
+uv python install 3.14.0 3.14.0+freethreaded
 ```
 
 3. Set up virtual environment and install **maturin**
 
 ```
-uv venv -p 3.13.2 .venv
+uv venv -p 3.14.0 .venv
 source .venv/bin/activate
 uv pip install maturin
 python -m ensurepip --default-pip
@@ -186,8 +186,8 @@ To provide Python bindings for an async Rust library, a new dependency [`pyo3-as
 in `Cargo.toml`, add these depedncencies:
 
 ```toml
-pyo3 = "0.23"
-pyo3-async-runtimes = { version = "0.23", features = ["attributes", "tokio-runtime"] }
+pyo3 = "0.27"
+pyo3-async-runtimes = { version = "0.27", features = ["attributes", "tokio-runtime"] }
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -296,7 +296,7 @@ harness = false
 We also want to make sure `testing` and `attributes` are included in `features` of `pyo3-async-runtimes`:
 
 ```toml
-pyo3-async-runtimes = { version = "0.23", features = ["attributes", "tokio-runtime", "testing"] }
+pyo3-async-runtimes = { version = "0.27", features = ["attributes", "tokio-runtime", "testing"] }
 ```
 
 Now in `pytests/test.rs` we can put a simple test to test if the `order` can be awaited with no issues:
@@ -319,7 +319,7 @@ async fn main() -> pyo3::PyResult<()> {
 }
 ```
 
-Now try running the test by `cargo test`, you will see that we run into an issue. You may get an unresolved import error "use of undeclared crate or module `py202`". This is because, [the compiler cannot find the crate with `crate-type` as "cdylib"](https://pyo3.rs/v0.23.4/faq.html#i-cant-run-cargo-test-my-crate-cannot-be-found-for-tests-in-tests-directory). Simply add "rlib" to `crate-type` in `Cargo.toml`:
+Now try running the test by `cargo test`, you will see that we run into an issue. You may get an unresolved import error "use of undeclared crate or module `py202`". This is because, [the compiler cannot find the crate with `crate-type` as "cdylib"](https://pyo3.rs/v0.27.1/faq.html#i-cant-run-cargo-test-my-crate-cannot-be-found-for-tests-in-tests-directory). Simply add "rlib" to `crate-type` in `Cargo.toml`:
 
 ```toml
 [lib]
@@ -335,7 +335,7 @@ pub async fn make_order(input_str: String) -> () {
     ...
 }
 ```
-If you run into other issues, have a look at the [FAQ page at PyO3 user guide](https://pyo3.rs/v0.23.4/faq.html) and see if there is a solution/ workaround for it.
+If you run into other issues, have a look at the [FAQ page at PyO3 user guide](https://pyo3.rs/v0.27.1/faq.html) and see if there is a solution/ workaround for it.
 
 Now, spend some time to expand the module. Add more functionalities in `src/lib.rs` and don't forget to test it in `pytests/test.rs`. For example, you can create another public future of `value_meal` which is a meal with a burger, a soda and a fries. It can be an item in the order. So an order can be "value_meal burger soda" which in total will have 2 burgers, 2 soda and 1 fries.
 
@@ -482,7 +482,7 @@ Now try `maturin develop` you will see an error:
 We forgot the `Cargo.toml` file, let's look at it. Now we can remove `pyo3-async-runtimes` and `tokio` in our dependency because we don't need them (`pyo3-async-runtimes` is still used in the test which we will not use for now). However, we are using the async feature in PyO3 (which is still in development). So we need to add this feature to PyO3:
 
 ```toml
-pyo3 = { version = "0.23", features = ["experimental-async"]}
+pyo3 = { version = "0.27", features = ["experimental-async"]}
 ```
 Now try `maturin develop` again and try out the function in Python. Notice that this time you can directly `asyncio.run` the coroutine created in PyO3:
 
@@ -667,7 +667,7 @@ fn soda(counter: Py<PyList>) -> () {
 
 Instead of using a number to hold the number of burgers and soda available, we will use a list to "store" the items. This design change is made because of the flexibility of list and its methods in Python. It would have be more complicated if we use integers in Python instead. Another way to do is to create a custom Python object type. You can try implementing it as an extra challenge in this exercise.
 
-If `call_method1` and `call_method0` looks unfamilar to you, please check [the documentation here](https://docs.rs/pyo3/latest/pyo3/struct.Py.html#method.call_method1) and [here](https://docs.rs/pyo3/latest/pyo3/struct.Py.html#method.call_method0), same as `Python::with_gil`, you can [see details here](https://docs.rs/pyo3/0.23.4/pyo3/marker/struct.Python.html#method.with_gil). 
+If `call_method1` and `call_method0` looks unfamilar to you, please check [the documentation here](https://docs.rs/pyo3/latest/pyo3/struct.Py.html#method.call_method1) and [here](https://docs.rs/pyo3/latest/pyo3/struct.Py.html#method.call_method0), same as `Python::with_gil`, you can [see details here](https://docs.rs/pyo3/0.27.1/pyo3/marker/struct.Python.html#method.with_gil). 
 
 Also note that the `counter` passing in here is a `Py<T>` pointer pointing to a `PyList` - it is different from the `Bound<'py, PyList>` which we will encounter later. With `Py<T>` pointer the references is not tied to the GIL and therefore can be passed into multiple threads in Rust. If you check the [documentation of `Py`](https://docs.rs/pyo3/latest/pyo3/struct.Py.html#), you will see that it has the `Send` and `Sync` trait implemented. This is not the same as the `Bound` which has [both of them NOT implemented](https://docs.rs/pyo3/latest/pyo3/struct.Bound.html#synthetic-implementations).
 
@@ -768,7 +768,7 @@ loop {
 }
 ```
 
-Here `py.allow_threads` [temporary releasing the Python GIL](https://docs.rs/pyo3/0.23.4/pyo3/marker/struct.Python.html#method.allow_threads) to be acquired by other Python threads and will get it back once the `sleep` is finished.
+Here `py.allow_threads` [temporary releasing the Python GIL](https://docs.rs/pyo3/0.27.1/pyo3/marker/struct.Python.html#method.allow_threads) to be acquired by other Python threads and will get it back once the `sleep` is finished.
 
 Now if you try to `maturin develop` again and run the Python try script above, you will see that now the orders can be completed. However, they are only fulfilling the order one after another. Now, if we put the orders in different Python threads:
 
@@ -824,7 +824,7 @@ loop {
 }
 ```
 
-Since in the current verion of PyO3 (version 0.23), having the GIL is still the default. To enable compiling module that is compatable and using the thread-free property of the thread-free Python, we will have to pass `gil_used = false` as a parameter to the `pymodule` procedural macro like this:
+Since in the current verion of PyO3 (version 0.27), having the GIL is still the default. To enable compiling module that is compatable and using the thread-free property of the thread-free Python, we will have to pass `gil_used = false` as a parameter to the `pymodule` procedural macro like this:
 
 ```rust
 #[pymodule(gil_used = false)]
