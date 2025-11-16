@@ -337,6 +337,8 @@ pub async fn make_order(input_str: String) -> () {
 ```
 If you run into other issues, have a look at the [FAQ page at PyO3 user guide](https://pyo3.rs/v0.27.1/faq.html) and see if there is a solution/ workaround for it.
 
+*Note: recently testing running `cargo test` using `uv` enviroments produced some weird error. For example: `Fatal Python error: Failed to import encodings module` If you have the same issue, please let me know. In the meantime, you can try using other Python environments, for example `pyenv`, to see if it works.*
+
 Now, spend some time to expand the module. Add more functionalities in `src/lib.rs` and don't forget to test it in `pytests/test.rs`. For example, you can create another public future of `value_meal` which is a meal with a burger, a soda and a fries. It can be an item in the order. So an order can be "value_meal burger soda" which in total will have 2 burgers, 2 soda and 1 fries.
 
 ---
