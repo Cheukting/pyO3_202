@@ -13,7 +13,7 @@ Please note that in this workshop, beside assuming that you have experience prog
 ## Preflight checklist
 
 - [Install/ Update Rust](https://www.rust-lang.org/tools/install)
-- Make sure having Python 3.13, both the "normal" version (with GIL) and [free-threaded Python](https://docs.python.org/3/howto/free-threading-python.html#installation))
+- Make sure having Python 3.13, both the "normal" version (with GIL) and [free-threaded Python](https://docs.python.org/3/howto/free-threading-python.html#installation)
 - Make sure using virtual environment (recommend using uv)
 
 ## Windows checklist
@@ -64,7 +64,7 @@ or you can clone this repo with the code in this workshop included in the `ex_*`
 
 Concurrency is used a lot in modern programming. We do not want to waste any computational time in our fast phased world, especially everyone now have a personal computer/ laptop or mobile device which is packed with computational power.
 
-The are many design and way to achieve concurrency, to keep things simple when we are talking about concurrency in this workshop, we will be mainly focusing on:
+There are many design and way to achieve concurrency, to keep things simple when we are talking about concurrency in this workshop, we will be mainly focusing on:
 
 - Asynchronous programming (with async/await pattern)
 - Multithreaded programming
@@ -79,9 +79,9 @@ Asyncio has been used in many Python applications, from frameworks like [FastAPI
 
 ### Multi-threading in Python
 
-Multi-threading, or threading, speed up I/O Bound and CPU bound processes, however, the CPU bound processes benefits maybe limited by the [Global Interpreter Lock (GIL)](https://docs.python.org/3/glossary.html#term-global-interpreter-lock). That may be the reason why threading in Python is not very popular. Threading allow tasks be handle in parallel, however, it is more complicated as there are complication that can arise with threading, such as race conditions and, deadlocks and memory leaks.
+Multi-threading, or threading, speed up I/O Bound and CPU bound processes, however, the CPU bound processes benefits maybe limited by the [Global Interpreter Lock (GIL)](https://docs.python.org/3/glossary.html#term-global-interpreter-lock). That may be the reason why threading in Python is not very popular. Threading allow tasks be handled in parallel, however, it is more complicated as there are complication that can arise with threading, such as race conditions and, deadlocks and memory leaks.
 
-In the past, Python's solution to handle complexity caused by multi-threading is to introduce a [Global Interpreter Lock (GIL)](https://docs.python.org/3/glossary.html#term-global-interpreter-lock), which limit [bytecode](https://docs.python.org/3/glossary.html#term-bytecode) to be execute by only one thread at a time. However, due to high demand from the community, from Python 3.13 the GIL can be optionally disabled, this is sometimes also refered to as [free-threaded Python](https://docs.python.org/3/howto/free-threading-python.html#installation).
+In the past, Python's solution to handle complexity caused by multi-threading is to introduce a [Global Interpreter Lock (GIL)](https://docs.python.org/3/glossary.html#term-global-interpreter-lock), which limit [bytecode](https://docs.python.org/3/glossary.html#term-bytecode) to be executed by only one thread at a time. However, due to high demand from the community, from Python 3.13 the GIL can be optionally disabled, this is sometimes also referred to as [free-threaded Python](https://docs.python.org/3/howto/free-threading-python.html#installation).
 
 
 ## async/.await in Rust
@@ -92,7 +92,7 @@ In general Async concurrency is much more efficient than concurrency with thread
 
 ### Multi-threading in Rust
 
-Since there is no GIL n Rust, we will have to pay attention to the issues that multi-threading may give us. But fear not, Rust is a language famous for its memory safety and robust ownership rules which can help avoid such problems. With tight ownership and lifetime rules, smart pointers and atomic referencing in Rust, we are equipt with tools that can help us to achieve freeless concurrency.
+Since there is no GIL n Rust, we will have to pay attention to the issues that multi-threading may give us. But fear not, Rust is a language famous for its memory safety and robust ownership rules which can help avoid such problems. With tight ownership and lifetime rules, smart pointers and atomic referencing in Rust, we are equipt with tools that can help us to achieve fearless concurrency.
 
 In this workshop, we will look at how to do threading in Rust and experiment with using PyO3 to perform multi-threading in Python code. We will also look at what adjustment we need to make in PyO3 to accommodate for [free-threaded Python](https://docs.python.org/3/howto/free-threading-python.html#installation).
 
@@ -100,7 +100,7 @@ In this workshop, we will look at how to do threading in Rust and experiment wit
 
 ## Exercise 1 - Taking orders with async/ await in Python
 
-In this exercise, we will first do some warm up by writing some async/ await code in Python. Let's think about a fastfood restaurant, we will call it PyBurger. So let's look at `pyburger.py` (you create a new Python file an d copy and paste the following code):
+In this exercise, we will first do some warm up by writing some async/ await code in Python. Let's think about a fastfood restaurant, we will call it PyBurger. So let's look at `pyburger.py` (you create a new Python file and copy and paste the following code):
 
 ```python
 import asyncio
@@ -131,7 +131,7 @@ async def order(order=[]):
 
 asyncio.run(order(["burger", "soda", "burger"]))
 ```
-Now try to add another order item "fries" and try to prepare various orders. Note that the orders are getting prepared asynchronously, you can try varing the time it takes for each item and see the order of competitions are being different.
+Now try to add another order item "fries" and try to prepare various orders. Note that the orders are getting prepared asynchronously, you can try varying the time it takes for each item and see the order of competitions are being different.
 
 So, how can we implement it in Rust and use it in Python with PyO3? For Rust, there are 2 most popular crate for doing async/.away, they are [`async-std`](https://async.rs/) and [`tokio`](https://tokio.rs/). In this example, we will use `tokio`. In a pure rust code, the similar implementation can be somthing like:
 
@@ -179,11 +179,11 @@ async fn main() {
 
 If you want, you can try running the code above in a new Rust binary project.
 
-Note that when you use `spawn` to a future in Rust, the future will get scheduled and you will get a `JoinHandle` which you can await later to get the result back (if there's any). In our example above all the item tasks (`burger` and `soda`) deos not return anything meaningfully so we just discard them. However, by awaiting the JoinHandles later (not at the time it was spawn) the item tasks can be performed asynchronously.
+Note that when you use `spawn` to a future in Rust, the future will get scheduled, and you will get a `JoinHandle` which you can await later to get the result back (if there's any). In our example above all the item tasks (`burger` and `soda`) deos not return anything meaningfully so we just discard them. However, by awaiting the JoinHandles later (not at the time it was spawn) the item tasks can be performed asynchronously.
 
-To provide Python bindings for an async Rust library, a new dependency [`pyo3-async-runtimes`](https://github.com/PyO3/pyo3-async-runtimes) will be needed. It is a brand new part of the broader PyO3 ecosystem so things may change rapidly. Please check the official documentation and the project repo if in doubt.
+To provide Python bindings for an async Rust library, a new dependency [`pyo3-async-runtimes`](https://github.com/PyO3/pyo3-async-runtimes) will be needed. It is a brand-new part of the broader PyO3 ecosystem so things may change rapidly. Please check the official documentation and the project repo if in doubt.
 
-in `Cargo.toml`, add these depedncencies:
+in `Cargo.toml`, add these dependencies:
 
 ```toml
 pyo3 = "0.27"
@@ -246,7 +246,7 @@ fn py202(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 ```
 
-In the code above, we renamed `order` as `make_order` and now `order` is just a normal function returning a `PyResult` with a bounded `PyAny` however, inside the function, we use `pyo3_async_runtimes::tokio::future_into_py` to turn the future that we have writen into a bounded Python object. `future_into_py` take two arguments, the first one is the Python token, the second is an async block (which will be evaluates to a future). 
+In the code above, we renamed `order` as `make_order` and now `order` is just a normal function returning a `PyResult` with a bounded `PyAny` however, inside the function, we use `pyo3_async_runtimes::tokio::future_into_py` to turn the future that we have writen into a bounded Python object. `future_into_py` take two arguments, the first one is the Python token, the second is an async block (which will be evaluated to a future). 
 
 PyO3 will then wrap and turn this future into a Python future, so when we call it from our Python module, we can `await` it. Let's look at the Python script which we can use it. Let's try this:
 
@@ -258,7 +258,7 @@ asyncio.run(order("burger soda burger"))
 
 ```
 
-When you run it, you will see a `RuntimeError: no running event loop`. Why is it? The reason being that, now we have a future in Python created by PyO3 that have no reference to the Python event loop. So in Python's perspective it cannot be called. Unfortunately the current work around is to wrap `order` in a proper Python async function:
+When you run it, you will see a `RuntimeError: no running event loop`. Why is it? The reason being that, now we have a future in Python created by PyO3 that have no reference to the Python event loop. So in Python's perspective it cannot be called. Unfortunately the current workaround is to wrap `order` in a proper Python async function:
 
 ```python
 import asyncio
@@ -278,7 +278,7 @@ Now you should see similar behaviour as your starting Python code. Take some tim
 
 ## Exercise 2 - Testing Rust Async in Python
 
-As seen in the previous exercise, Python has it's own event loop while we also have the event loop in Rust doing all the async/.await. The contribute to some [weird behaviours](https://docs.rs/pyo3-async-runtimes/latest/pyo3_async_runtimes/index.html) when using PyO3. To make things work, [the current solution](https://github.com/PyO3/pyo3-async-runtimes?tab=readme-ov-file#managing-event-loops) is to let Python control the main thread and block the main thread in Rust. This present extra challenges when trying to use corroutines provided by Python in Rust. This also require some special care to be taken during testing.
+As seen in the previous exercise, Python has its own event loop while we also have the event loop in Rust doing all the async/.await. This contributes to some [weird behaviours](https://docs.rs/pyo3-async-runtimes/latest/pyo3_async_runtimes/index.html) when using PyO3. To make things work, [the current solution](https://github.com/PyO3/pyo3-async-runtimes?tab=readme-ov-file#managing-event-loops) is to let Python control the main thread and block the main thread in Rust. This present extra challenges when trying to use coroutines provided by Python in Rust. This also require some special care to be taken during testing.
 
 Lucky for us, [`pyo3-async-runtimes`](https://github.com/PyO3/pyo3-async-runtimes) provides [testing utilities](https://docs.rs/pyo3-async-runtimes/latest/pyo3_async_runtimes/testing/index.html) that we can use. These utilities let us perform integration tests and doc tests. Note that lib tests are not available due to the complexity mentioned.
 
@@ -327,7 +327,7 @@ name = "py202"
 crate-type = ["cdylib", "rlib"]
 ```
 
-Now run `cargo test` again, you may see the "function `make_order` is private" error if you have not make the `make_order` in `src/lib.rs` public:
+Now run `cargo test` again, you may see the "function `make_order` is private" error if you have not made the `make_order` in `src/lib.rs` public:
 
 ```rust
 pub async fn make_order(input_str: String) -> () {
@@ -337,7 +337,7 @@ pub async fn make_order(input_str: String) -> () {
 ```
 If you run into other issues, have a look at the [FAQ page at PyO3 user guide](https://pyo3.rs/v0.27.1/faq.html) and see if there is a solution/ workaround for it.
 
-*Note: recently testing running `cargo test` using `uv` enviroments produced some weird error. For example: `Fatal Python error: Failed to import encodings module` If you have the same issue, please let me know. In the meantime, you can try using other Python environments, for example `pyenv`, to see if it works.*
+*Note: recently testing running `cargo test` using `uv` environments produced some weird error. For example: `Fatal Python error: Failed to import encodings module` If you have the same issue, please let me know. In the meantime, you can try using other Python environments, for example `pyenv`, to see if it works.*
 
 Now, spend some time to expand the module. Add more functionalities in `src/lib.rs` and don't forget to test it in `pytests/test.rs`. For example, you can create another public future of `value_meal` which is a meal with a burger, a soda and a fries. It can be an item in the order. So an order can be "value_meal burger soda" which in total will have 2 burgers, 2 soda and 1 fries.
 
@@ -347,7 +347,7 @@ Now, spend some time to expand the module. Add more functionalities in `src/lib.
 
 As we briefly mentioned before, threading in Python may not help with speeding up due to limitation by the GIL. Although there are now options to remove the GIL, which we will cover later. Let's assume the premise that we have the GIL in Python.
 
-The GIL in Python is used as an assurance of threadsafety. In Rust, threadsafety is safegarded by the compiler with ownership and type checking.
+The GIL in Python is used as an assurance of threadsafety. In Rust, threadsafety is safeguarded by the compiler with ownership and type checking.
 
 To start, we will look at our previous Rust code that use async/.await with tokio:
 
@@ -393,7 +393,7 @@ async fn main() {
 }
 ```
 
-Now, instead of using async, we will make order in mutiple threads like this:
+Now, instead of using async, we will make order in multiple threads like this:
 
 ```rust
 use std::thread::{sleep, spawn};
@@ -495,7 +495,7 @@ from py202 import order
 asyncio.run(order("burger soda burger"))
 ```
 
-As the coroutine crated does not depend on an event loop, it is running on multithread instead. Of cause it can also be awaited like before:
+As the coroutine crated does not depend on an event loop, it is running on multithread instead. Of course, it can also be awaited like before:
 
 ```python
 import asyncio
@@ -514,16 +514,16 @@ Before we move on, have a revision on the [Fearless Concurrency](https://doc.rus
 
 ## Exercise 4 - Shared Python object
 
-Now, since we already understand how tha basics works, let's imagin we are putting it in a more realistic system. Imagine we have a tiny but busy fastfood stand. Our design before won't work because:
+Now, since we already understand how tha basics works, let's imagine we are putting it in a more realistic system. Imagine we have a tiny but busy fastfood stand. Our design before won't work because:
 
 1. We can spawn as many as the same type of items simultaneously as we want, realistically there are limitation. For example, if we only have 1 soda machine, we can only pour 1 soda at a time.
-2. Now for each item in the order, once the order is created, the specific items required will be spawn and the order will not be completed untill those items specifically created for this order is completed. In a realistic fastfood restaurant, the items created will be put in a pool for the staff finishing off the item to grab. We would like to recreated this pool system.
-3. So far we have only create 1 order at a time, realistically there will be many orders getting prepared simytaneously.
+2. Now for each item in the order, once the order is created, the specific items required will be spawn and the order will not be completed until those items specifically created for this order is completed. In a realistic fastfood restaurant, the items created will be put in a pool for the staff finishing off the item to grab. We would like to recreate this pool system.
+3. So far we have only created 1 order at a time, realistically there will be many orders getting prepared simultaneously.
 
 To accommodate this change in designs:
 
 1. We will lock the spawning of the same type of items to be 1 at a time.
-2. We will created a pool count for each type of items and these counts will be shared througout the program
+2. We will create a pool count for each type of items and these counts will be shared throughout the program
 3. We will use concurrency (multi-threading in Rust and async in Python) to make multiple orders
 
 In Rust, we use Mutex to share data with multiple access point. The Mutex locking system can ensure that whatever it is holding can only be access by one point at a time. For reference counting, we will need a `Arc<T>` smart pointer for the Mutex since we are going to share the Mutex across multiple threads. For details see the [Shared-State Concurrency chapter in the Rust book](https://doc.rust-lang.org/book/ch16-03-shared-state.html)
@@ -641,11 +641,11 @@ fn main() {
 }
 ```
 
-The completed code would probably looks like [`ex_4/pyburger.rs`](ex_4/pyburger.rs). Feel free to try it in a `main.rs` in a binary rust project. It seems working fine but there is a runtime issue in this code, can you spot it? If not, don't worry, it will be more apprant when we move things to the Python side and we will explain then.
+The completed code would probably look like [`ex_4/pyburger.rs`](ex_4/pyburger.rs). Feel free to try it in a `main.rs` in a binary rust project. It seems working fine but there is a runtime issue in this code, can you spot it? If not, don't worry, it will be more app rant when we move things to the Python side and we will explain then.
 
 Now we have a code in pure Rust that can handle multiple orders asynchronously, what about we create orders in python?
 
-In PyO3 where we use the Python GIL, we do not have to use Mutex to lock the PyObjects as it can only be access by acquiring the GIL and therefoer ensuring the PyObject can only be access at one point at a time. So you can also say that the GIL act as a Mutex.
+In PyO3 where we use the Python GIL, we do not have to use Mutex to lock the PyObjects as it can only be access by acquiring the GIL and therefore ensuring the PyObject can only be access at one point at a time. So you can also say that the GIL act as a Mutex.
 
 ```rust
 fn burger(counter: Py<PyList>) -> () {
@@ -667,9 +667,9 @@ fn soda(counter: Py<PyList>) -> () {
 }
 ```
 
-Instead of using a number to hold the number of burgers and soda available, we will use a list to "store" the items. This design change is made because of the flexibility of list and its methods in Python. It would have be more complicated if we use integers in Python instead. Another way to do is to create a custom Python object type. You can try implementing it as an extra challenge in this exercise.
+Instead of using a number to hold the number of burgers and soda available, we will use a list to "store" the items. This design change is made because of the flexibility of list and its methods in Python. It would have been more complicated if we use integers in Python instead. Another way to do is to create a custom Python object type. You can try implementing it as an extra challenge in this exercise.
 
-If `call_method1` and `call_method0` looks unfamilar to you, please check [the documentation here](https://docs.rs/pyo3/latest/pyo3/struct.Py.html#method.call_method1) and [here](https://docs.rs/pyo3/latest/pyo3/struct.Py.html#method.call_method0), same as `Python::with_gil`, you can [see details here](https://docs.rs/pyo3/0.27.1/pyo3/marker/struct.Python.html#method.with_gil). 
+If `call_method1` and `call_method0` looks unfamiliar to you, please check [the documentation here](https://docs.rs/pyo3/latest/pyo3/struct.Py.html#method.call_method1) and [here](https://docs.rs/pyo3/latest/pyo3/struct.Py.html#method.call_method0), same as `Python::with_gil`, you can [see details here](https://docs.rs/pyo3/0.27.1/pyo3/marker/struct.Python.html#method.with_gil). 
 
 Also note that the `counter` passing in here is a `Py<T>` pointer pointing to a `PyList` - it is different from the `Bound<'py, PyList>` which we will encounter later. With `Py<T>` pointer the references is not tied to the GIL and therefore can be passed into multiple threads in Rust. If you check the [documentation of `Py`](https://docs.rs/pyo3/latest/pyo3/struct.Py.html#), you will see that it has the `Send` and `Sync` trait implemented. This is not the same as the `Bound` which has [both of them NOT implemented](https://docs.rs/pyo3/latest/pyo3/struct.Bound.html#synthetic-implementations).
 
@@ -711,11 +711,11 @@ order("burger soda burger soda soda", burger_pool, soda_pool)
 order("burger soda burger", burger_pool, soda_pool)
 ```
 
-Here we have not put the `order` into multi-threads yet, we will do it later. For now we just want to make sure it works.
+Here we have not put the `order` into multi-threads yet, we will do it later. For now, we just want to make sure it works.
 
 You may notice that it ended up having an endless loop and the program is deadlocked. This is the result of our bad design.
 
-You see that we have an infinite loop that checks checks if the required items has been prepared:
+You see that we have an infinite loop that checks if the required items has been prepared:
 
 ```rust
 loop {
@@ -805,11 +805,11 @@ Then you will see similar behaviors as the pure Rust code that we have before.
 
 ## Exercise 5 - Thread-free Python
 
-As you see having the Python GIL plays an important part as our code before, you may wonder, what if we are using thread-free Python which has no GIL? The answer is not simple.
+As you see having the Python GIL plays an important part as our code before, you may wonder what if we are using thread-free Python which has no GIL? The answer is not simple.
 
-For the full explanation, you may want to checkout the [relevant part in the PyO3 user guide](https://pyo3.rs/main/free-threading.html). For the short version, we can think of it like this. Instead of thinking function like `Python::with_gil` is acquiring the GIL, the relevant Rust thread is attached to the Python thread. And in a thread-free Python, instead of having only one Python thread, we will have multiple. To see that effect, we will do an experiment.
+For the full explanation, you may want to check out the [relevant part in the PyO3 user guide](https://pyo3.rs/main/free-threading.html). For the short version, we can think of it like this. Instead of thinking function like `Python::with_gil` is acquiring the GIL, the relevant Rust thread is attached to the Python thread. And in a thread-free Python, instead of having only one Python thread, we will have multiple. To see that effect, we will do an experiment.
 
-Remember we will run into a deadlock when not using  `py.allow_threads` around the break in the infinite loop? If we only have one Python thread allowed and it got held on by that loop, the item pool Python object can never be access thus creating a deadlock. In thread-free Python,  `py.allow_threads` would not be needed as there will be multiple Python thread running so it should be fine just like the code in [`ex_4/pyburger.rs`](ex_4/pyburger.rs). So let's do that.
+Remember we will run into a deadlock when not using  `py.allow_threads` around the break in the infinite loop? If we only have one Python thread allowed, and it got held on by that loop, the item pool Python object can never be access thus creating a deadlock. In thread-free Python,  `py.allow_threads` would not be needed as there will be multiple Python thread running so it should be fine just like the code in [`ex_4/pyburger.rs`](ex_4/pyburger.rs). So let's do that.
 
 First, remove the `py.allow_threads` in the loop:
 
@@ -826,7 +826,7 @@ loop {
 }
 ```
 
-Since in the current verion of PyO3 (version 0.27), having the GIL is still the default. To enable compiling module that is compatable and using the thread-free property of the thread-free Python, we will have to pass `gil_used = false` as a parameter to the `pymodule` procedural macro like this:
+In the current version of PyO3 (version 0.27), having the GIL is still the default. To enable compiling a module that is compatible and using the thread-free property of the thread-free Python, we will have to pass `gil_used = false` as a parameter to the `pymodule` procedural macro like this:
 
 ```rust
 #[pymodule(gil_used = false)]
@@ -836,7 +836,7 @@ fn py202(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 ```
 
-Now let's set up our thread-free enviroment:
+Now let's set up our thread-free environment:
 
 ```
 uv venv -p 3.13.2t .venv-free
